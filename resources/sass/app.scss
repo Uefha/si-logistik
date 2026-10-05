@@ -1,0 +1,178 @@
+// ---------------------------------------------------------------------------
+// SI-LOGISTIK - tema biru, putih, abu-abu (Bootstrap 5.3)
+// ---------------------------------------------------------------------------
+
+$primary: #1f4e9c;
+$secondary: #6b7686;
+$success: #198754;
+$warning: #f0ad00;
+$danger: #d9363e;
+
+$body-bg: #f4f6fa;
+$body-color: #1b2433;
+$font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$border-radius: 0.55rem;
+$border-radius-lg: 0.8rem;
+$card-border-color: #e3e8f0;
+$card-cap-bg: #fff;
+$input-focus-border-color: #2f6fd0;
+$input-focus-box-shadow: 0 0 0 0.2rem rgba(47, 111, 208, 0.18);
+$breadcrumb-divider: quote("\203A");
+
+@import "bootstrap/scss/bootstrap";
+
+$sidebar-width: 262px;
+$sidebar-bg: #0f2c5c;
+$sidebar-link: #b9c8e4;
+
+// ----- Kerangka aplikasi (sidebar + konten) ---------------------------------
+.app-sidebar {
+    --bs-offcanvas-width: #{$sidebar-width};
+    --bs-offcanvas-bg: #{$sidebar-bg};
+    --bs-offcanvas-color: #fff;
+    background-color: $sidebar-bg;
+    color: #fff;
+
+    .offcanvas-body {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        padding: 0;
+    }
+}
+
+@include media-breakpoint-up(lg) {
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: $sidebar-width;
+        z-index: 1030;
+        overflow-y: auto;
+        visibility: visible !important;
+        transform: none !important;
+        background-color: $sidebar-bg !important;
+    }
+
+    .app-main {
+        margin-left: $sidebar-width;
+    }
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.15rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #fff;
+    text-decoration: none;
+
+    .app-brand-icon {
+        display: grid;
+        place-items: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 0.65rem;
+        background: linear-gradient(135deg, #2f6fd0, #4c9be8);
+        font-size: 1.25rem;
+    }
+
+    strong { display: block; line-height: 1.1; letter-spacing: 0.02em; }
+    small { color: $sidebar-link; }
+}
+
+.app-nav {
+    padding: 1rem 0.75rem;
+
+    .nav-heading {
+        padding: 0.75rem 0.75rem 0.35rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #7d92b8;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.8rem;
+        border-radius: 0.55rem;
+        color: $sidebar-link;
+        font-weight: 500;
+
+        &:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+        &.active { background: $primary; color: #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); }
+        .bi { font-size: 1.05rem; }
+    }
+}
+
+.app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: calc(0.7rem + env(safe-area-inset-top, 0px)) 1.25rem 0.7rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid #e3e8f0;
+}
+
+.app-content {
+    padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
+}
+
+.app-footer {
+    padding: 0 1.25rem 1.5rem;
+    font-size: 0.8rem;
+    color: $secondary;
+}
+
+.page-head h1 { color: $primary; }
+
+// ----- Kartu & tabel --------------------------------------------------------
+.card { box-shadow: 0 1px 2px rgba(15, 44, 92, 0.05); }
+.card-header { font-weight: 600; }
+.table > :not(caption) > * > * { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+
+.diag-list dt { font-weight: 500; color: $secondary; }
+.diag-list dd { margin-bottom: 0.6rem; }
+
+// ----- Halaman masuk --------------------------------------------------------
+.auth-hero {
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem;
+    color: #fff;
+    background:
+        radial-gradient(circle at 15% 15%, rgba(76, 155, 232, 0.45), transparent 45%),
+        linear-gradient(145deg, #0f2c5c 0%, #1f4e9c 100%);
+
+    .hero-icon {
+        display: grid;
+        place-items: center;
+        width: 3.6rem;
+        height: 3.6rem;
+        margin-bottom: 1.5rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.14);
+        font-size: 1.9rem;
+    }
+
+    h2 { font-weight: 700; }
+    p { color: #cfdcf3; max-width: 28rem; }
+    ul { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+    li { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.65rem; color: #e6eefb; }
+    li .bi { color: #8fc2ff; }
+}
+
+.auth-card { max-width: 25rem; }
+
+// ----- Toast ----------------------------------------------------------------
+.toast-container { z-index: 1100; padding-top: calc(1rem + env(safe-area-inset-top, 0px)) !important; }
