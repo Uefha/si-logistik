@@ -56,6 +56,14 @@
                     Penyesuaian Stok
                 </x-sidebar-link>
 
+                <div class="nav-heading">Monitoring</div>
+                <x-sidebar-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')" icon="bar-chart-line">
+                    Laporan
+                </x-sidebar-link>
+                <x-sidebar-link :href="route('audit-log.index')" :active="request()->routeIs('audit-log.*')" icon="shield-check">
+                    Audit Log
+                </x-sidebar-link>
+
                 <div class="nav-heading">Pengaturan</div>
                 <x-sidebar-link :href="route('profile.edit')" :active="request()->routeIs('profile.*')" icon="person-gear">
                     Profil Admin

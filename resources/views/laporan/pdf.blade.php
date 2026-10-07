@@ -1,0 +1,4 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><style>body{font-family:DejaVu Sans,sans-serif;font-size:9px;color:#172b4d}h1{font-size:18px;margin:0 0 6px}p{margin:0 0 12px;color:#52627a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:5px;text-align:left}th{background:#e9eff8}tr:nth-child(even){background:#f8fafc}</style></head><body>
+<h1>{{ $judul }}</h1><p>Dicetak {{ now(config('app.timezone'))->format('d-m-Y H:i') }} · Periode {{ $filter['dari'] ?? 'semua' }} s.d. {{ $filter['sampai'] ?? 'semua' }}</p>
+<table><thead><tr>@foreach ($headers as $header)<th>{{ $header }}</th>@endforeach</tr></thead><tbody>@forelse ($baris as $row)<tr>@foreach ($row as $value)<td>{{ $value ?? '—' }}</td>@endforeach</tr>@empty<tr><td colspan="{{ count($headers) }}">Tidak ada data.</td></tr>@endforelse</tbody></table>
+</body></html>

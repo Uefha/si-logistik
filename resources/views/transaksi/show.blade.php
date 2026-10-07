@@ -26,7 +26,19 @@
     <div class="card"><div class="card-header bg-white">Barang dalam transaksi</div><div class="table-responsive">
         <table class="table align-middle mb-0"><thead><tr><th>Barang</th><th>Kode</th><th class="text-end">Jumlah</th><th class="text-end">Stok sebelum</th><th class="text-end">Stok sesudah</th></tr></thead>
             <tbody>@foreach ($transaksi->details as $detail)
-                <tr><td><a href="{{ route('master.barang.show', $detail->barang) }}">{{ $detail->barang->nama_barang }}</a><small class="d-block text-secondary">{{ $detail->barang->kategori?->nama }} · {{ $detail->barang->lokasi?->nama }}</small></td><td>{{ $detail->barang->kode_barang }}</td><td class="text-end">{{ \App\Support\Format::angka($detail->qty) }} {{ $detail->barang->satuan?->nama }}</td><td class="text-end">{{ \App\Support\Format::angka($detail->stok_sebelum) }}</td><td class="text-end fw-semibold">{{ \App\Support\Format::angka($detail->stok_sesudah) }}</td></tr>
+                <tr>
+                    <td class="detail-transaksi-barang">
+                        <a class="detail-transaksi-barang-nama" href="{{ route('master.barang.show', $detail->barang) }}">{{ $detail->barang->nama_barang }}</a>
+                        <div class="detail-transaksi-barang-meta">
+                            <span>{{ $detail->barang->kategori?->nama ?? 'Tanpa kategori' }}</span>
+                            <span>{{ $detail->barang->lokasi?->nama ?? 'Tanpa lokasi' }}</span>
+                        </div>
+                    </td>
+                    <td class="text-nowrap font-monospace">{{ $detail->barang->kode_barang }}</td>
+                    <td class="text-end text-nowrap">{{ \App\Support\Format::angka($detail->qty) }} {{ $detail->barang->satuan?->nama }}</td>
+                    <td class="text-end text-nowrap">{{ \App\Support\Format::angka($detail->stok_sebelum) }}</td>
+                    <td class="text-end text-nowrap fw-semibold">{{ \App\Support\Format::angka($detail->stok_sesudah) }}</td>
+                </tr>
             @endforeach</tbody>
         </table>
     </div></div>

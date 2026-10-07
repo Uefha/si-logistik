@@ -9,6 +9,7 @@ import { initCrudModal } from './ui/crud-modal';
 import { initBarcodeLabels, initTransaksiCepat } from './ui/transaksi';
 import { initKameraBarcode } from './ui/kamera';
 import { initFormPenyesuaian } from './ui/penyesuaian';
+import { initDashboardCharts } from './ui/dashboard';
 
 window.bootstrap = bootstrap;
 window.Alpine = Alpine;
@@ -29,4 +30,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initBarcodeLabels();
     initKameraBarcode();
     initFormPenyesuaian();
+    initDashboardCharts();
 });

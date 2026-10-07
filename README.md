@@ -1,12 +1,12 @@
-# SI-LOGISTIK — Overlay Kumulatif Tahap 1–5
+# SI-LOGISTIK — Overlay Kumulatif Tahap 1–6
 
-Aplikasi inventaris logistik untuk Bagian Logistik SMA Taruna Nusantara IKN. Paket ini melanjutkan proyek yang sudah memiliki setup/autentikasi, skema database, model, CRUD master barang, kategori, satuan, lokasi, barcode EAN-13 internal, soft delete, unggah foto, dan audit log. Tahap 4 menambahkan transaksi stok masuk/keluar dan POS barcode. Tahap 5 menambahkan scan kamera, kartu stok, histori terfilter, dan penyesuaian stok.
+Aplikasi inventaris logistik untuk Bagian Logistik SMA Taruna Nusantara IKN. Paket ini melanjutkan proyek yang sudah memiliki setup/autentikasi, skema database, model, CRUD master barang, kategori, satuan, lokasi, barcode internal, soft delete, unggah foto, dan audit log. Tahap 4 menambahkan transaksi stok masuk/keluar dan POS barcode. Tahap 5 menambahkan scan kamera, kartu stok, histori terfilter, dan penyesuaian stok. Tahap 6 menambahkan dashboard grafik, empat laporan, ekspor PDF/Excel, audit log server-side, dan peringatan stok.
 
 ## Kondisi proyek dan keputusan stack
 
 Workspace saat ini memakai Laravel 13, PHP 8.3+, Bootstrap 5.3, Alpine.js, Vite, DataTables 3.1.3 (`datatables.net-bs5`), dan SQLite untuk PHPUnit. Proyek belum memakai Yajra atau jQuery. Ini berbeda dari rencana awal Laravel 12, Yajra DataTables 12, jQuery, dan DataTables 2.3.8; pengguna telah memilih melanjutkan memakai stack yang terpasang. Pertahankan keputusan ini untuk pekerjaan berikutnya.
 
-Frontend dibundel lokal oleh Vite, tanpa CDN. `jsbarcode` menghasilkan barcode Code 128, `qrcode` menghasilkan QR, dan `html5-qrcode` memindai barcode/QR lewat kamera. Tidak ada migration baru pada Tahap 4 atau 5 karena `transactions`, `transaction_details`, `stok_mutasi`, `penyesuaian_stok`, `aktivitas_log`, dan `nomor_urut` sudah tersedia.
+Frontend dibundel lokal oleh Vite, tanpa CDN. `jsbarcode` menghasilkan barcode Code 128, `qrcode` menghasilkan QR, `html5-qrcode` memindai barcode/QR lewat kamera, dan Chart.js menggambar grafik dashboard. PDF memakai `barryvdh/laravel-dompdf`; Excel memakai `maatwebsite/excel`. Tidak ada migration baru pada Tahap 4–6: laporan/audit/dashboard membaca tabel yang sudah ada.
 
 ## Isi overlay
 
@@ -17,7 +17,8 @@ Frontend dibundel lokal oleh Vite, tanpa CDN. `jsbarcode` menghasilkan barcode C
 | Tahap 3 | Model/relasi, enum, factory, CRUD master, barcode internal, foto, DataTables, filter, audit |
 | Tahap 4 | `NomorTransaksiService`, `StokService`, Form Request, POS masuk/keluar, pencarian barcode, daftar/detail transaksi, ledger, audit, label Code 128 + QR |
 | Tahap 5 | Scan kamera, kartu stok, histori transaksi terfilter, riwayat barang, penyesuaian stok ADJ |
-| Frontend | Blade, Bootstrap SCSS, Bootstrap Icons, Alpine, Axios, DataTables, JsBarcode, QRCode |
+| Tahap 6 | Ringkasan dashboard, grafik 12 bulan dan stok per kategori, peringatan stok, laporan stok/masuk/keluar/mutasi, PDF/Excel, audit log terfilter |
+| Frontend | Blade, Bootstrap SCSS, Bootstrap Icons, Alpine, Axios, DataTables, Chart.js, JsBarcode, QRCode |
 | Pemeriksaan | PHPUnit, `tools/audit.ps1`, `tools/audit.py` (Python diperlukan untuk skrip ini) |
 
 ## Instalasi baru
@@ -77,6 +78,15 @@ Seeder dapat dijalankan ulang. Untuk reset data pengembangan saja: `php artisan 
 - Penyesuaian mengunci ulang barang, mengambil stok sistem terbaru, menghitung `selisih = stok_fisik - stok_sistem`, dan menyimpan transaksi `ADJ`, detail, baris `penyesuaian_stok`, ledger, dan audit dalam satu DB transaction.
 - Selisih nol ditolak karena tidak ada perubahan stok. Selisih negatif disimpan sebagai `qty_keluar`; positif sebagai `qty_masuk`. Nilai selisih pada tabel penyesuaian tetap bertanda.
 
+## Aturan Tahap 6
+
+- Dashboard menghitung ringkasan dari barang aktif, transaksi, dan ledger. Grafik menampilkan barang masuk/keluar dan jumlah transaksi per bulan selama 12 bulan terakhir serta stok per kategori.
+- Peringatan stok menampilkan barang aktif dengan stok nol atau sama/di bawah minimum. Peringatan bersifat live; tidak ada status dibaca dan tidak ada tabel notifikasi baru.
+- Laporan terdiri dari stok saat ini, barang masuk, barang keluar, dan mutasi stok. Laporan pergerakan menerima periode hari/minggu/bulan/tahun atau rentang kustom serta filter barang, kategori, lokasi, petugas, dan nomor transaksi bila relevan.
+- PDF dan Excel dibuat dari layanan query yang sama dengan tabel laporan, sehingga filter yang aktif tetap berlaku. Snapshot stok tidak memakai filter tanggal karena menunjukkan keadaan stok saat ini.
+- Audit Log membaca `aktivitas_log` dengan paginasi server-side DataTables, filter tanggal/modul/petugas, pencarian, subjek, detail ringkas, dan IP. Nilai teks di-escape sebelum ditampilkan.
+- Tidak ada perubahan skema database Tahap 6. Dependensi baru adalah Dompdf, Laravel Excel, dan Chart.js; grafik dimuat dinamis hanya di halaman dashboard.
+
 ### Menyiapkan HTTPS XAMPP untuk ponsel di jaringan sekolah
 
 Browser hanya memberi akses kamera pada origin aman seperti HTTPS atau localhost. Ponsel harus membuka hostname server lewat HTTPS; `localhost` pada ponsel menunjuk ponsel itu sendiri. Gunakan hostname DNS internal, misalnya `si-logistik.intra`, yang diarahkan ke IP server. Untuk sertifikat, minta sertifikat server dari CA sekolah dengan SAN berisi hostname tersebut (dan IP LAN bila pengguna mengakses melalui IP). Pastikan CA penerbit dipercaya di ponsel dan PC; jangan menyalin private key ke perangkat klien.
@@ -130,6 +140,11 @@ Pemeriksaan cepat di DevTools pada halaman aplikasi: `window.isSecureContext` ha
 | Hitung stok fisik lebih tinggi dari sistem, tinjau, lalu konfirmasi | Nomor ADJ tercipta, stok naik, selisih positif, detail, ledger masuk, dan audit dibuat |
 | Hitung stok fisik lebih rendah dari sistem | Stok turun, selisih negatif, ledger keluar mencatat kuantitas positif |
 | Masukkan stok fisik yang sama dengan sistem | Konfirmasi menjelaskan tidak ada perubahan dan transaksi tidak disimpan |
+| Buka dashboard | Ringkasan menampilkan total barang/stok, pergerakan hari ini, transaksi bulan ini, grafik mutasi dan jumlah transaksi 12 bulan, stok per kategori, serta stok kritis |
+| Klik salah satu barang pada peringatan stok | Detail barang yang sesuai terbuka; stok habis/menipis terlihat |
+| Buka tiap tab laporan dan pilih periode serta filter barang/kategori/lokasi/petugas | Tabel hanya menampilkan baris yang sesuai filter |
+| Unduh PDF lalu Excel dengan filter aktif | Kedua berkas berisi jenis laporan dan hasil filter yang sama dengan tabel |
+| Buka Audit Log, cari aktivitas, lalu filter modul/petugas/tanggal | Tabel server-side hanya menampilkan log yang cocok dan detail ringkasnya |
 
 ## Query pemeriksaan MySQL
 
@@ -187,15 +202,15 @@ Hasil pada workspace ini:
 
 | Pemeriksaan | Hasil |
 |---|---|
-| `php artisan test --compact` | 115 lulus, 551 asersi |
-| `npm run build` | Berhasil; modul kamera dimuat terpisah saat tombol scan digunakan |
+| `php artisan test --compact` | 119 lulus, 571 asersi |
+| `npm run build` | Berhasil; Chart.js dan kamera dimuat dalam chunk terpisah |
 | PHP lint | Dijalankan oleh audit PowerShell; 0 masalah |
 | Blade dan referensi | Direktif seimbang; semua include dan komponen ditemukan |
 | Rute dan view | Semua `route()`, `routeIs()`, controller method, dan `view()` cocok |
 | Rute ke controller | Semua controller dan metode yang terdaftar ditemukan |
 | `git diff --check` | Bersih |
 
-Lingkungan tidak menyediakan Python, jadi `tools/audit.py` tidak dijalankan. Audit setara dijalankan dengan `tools/audit.ps1`. Migration MySQL dan pemeriksaan browser/kamera langsung belum dijalankan; PHPUnit memakai SQLite memori. Build final berhasil dan membagi kode kamera ke chunk yang dimuat hanya saat pemindaian dimulai. `npm install` melaporkan dua temuan kritis pada seluruh pohon dependensi; audit dan koreksi dependency dicadangkan untuk Tahap 7.
+Lingkungan tidak menyediakan Python, jadi `tools/audit.py` tidak dijalankan. Audit setara dijalankan dengan `tools/audit.ps1`. Migration MySQL dan pemeriksaan browser/kamera langsung belum dijalankan; PHPUnit memakai SQLite memori. Build final berhasil; Chart.js dan kode kamera berada di chunk terpisah. `npm install` melaporkan dua temuan kritis pada seluruh pohon dependensi; audit dan koreksi dependency menjadi pekerjaan hardening Tahap 7.
 
 ## Temuan dan koreksi
 
@@ -208,8 +223,12 @@ Lingkungan tidak menyediakan Python, jadi `tools/audit.py` tidak dijalankan. Aud
 | Detail barang belum bisa mencetak barcode/QR | Ditambahkan JsBarcode dan QRCode lokal serta CSS cetak |
 | Belum ada penghitungan fisik stok dan riwayat ledger yang dapat dicetak | Ditambahkan penyesuaian ADJ atomik dan halaman kartu stok baca-saja |
 | Kamera langsung dimuat bersama app utama sehingga bundle membesar | Modul kamera menggunakan dynamic import saat tombol scan ditekan |
+| Dashboard diagnostik belum memberi informasi stok | Diganti kartu ringkasan, grafik, mutasi terbaru, dan daftar peringatan stok |
+| Belum ada cara melihat laporan/mengekspor | Ditambahkan empat laporan dengan filter dan PDF/Excel yang berbagi query |
+| Audit log belum memiliki halaman pencarian | Ditambahkan DataTables server-side dan filter modul, petugas, tanggal, pencarian |
+| Status notifikasi belum tersimpan dan tidak ada skema persetujuan untuk mengubahnya | Peringatan dibuat langsung dari kondisi stok aktif tanpa migration; tidak ada penanda baca |
 | Python tidak tersedia untuk audit bawaan | Ditambahkan audit PowerShell `tools/audit.ps1`; false positive cabang `@empty` pada `@forelse` diperbaiki |
 
 ## Tahap berikutnya
 
-Tahap 5 selesai dan menunggu pengujian pengguna. Jangan mulai Tahap 6 sebelum ada persetujuan. Tahap 6 berisi dashboard dan laporan; Tahap 7 berisi hardening, uji race condition/rollback/invarian, UX responsif, pengaturan, dan dokumentasi akhir.
+Tahap 6 selesai dan menunggu pengujian serta persetujuan pengguna. Tahap 7 berikutnya mencakup hardening, pemeriksaan race condition/rollback/invarian, UX responsif, pengaturan, dan dokumentasi akhir; jangan mulai sebelum tahap ini diuji pengguna.

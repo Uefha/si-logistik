@@ -195,6 +195,37 @@ div.dt-container {
 
 .barcode-label { max-width: 620px; }
 
+.dashboard-stat { min-height: 118px; }
+.chart-wrap { position: relative; height: 300px; }
+.chart-wrap-pie { height: 300px; }
+
+.detail-barang-info {
+    .detail-barang-label {
+        color: #52627a;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding-top: 0.25rem;
+    }
+
+    .detail-barang-value {
+        color: #172b4d;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+        margin-bottom: 0.85rem;
+    }
+
+    .detail-barang-deskripsi { white-space: normal; }
+}
+
+.detail-transaksi-barang { min-width: 250px; }
+.detail-transaksi-barang-nama { display: inline-block; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.detail-transaksi-barang-meta { display: flex; flex-wrap: wrap; gap: 0.2rem 0.75rem; margin-top: 0.3rem; color: #52627a; font-size: 0.8rem; line-height: 1.45; }
+.detail-transaksi-barang-meta span { overflow-wrap: anywhere; }
+
+@include media-breakpoint-down(sm) {
+    .chart-wrap { height: 250px; }
+}
+
 @media print {
     body { background: #fff !important; }
     .app-sidebar, .app-topbar, .app-footer, .page-head, .transaksi-actions, .toast-container,
