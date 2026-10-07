@@ -53,9 +53,51 @@ class AuditLogController extends Controller
                 return [
                     'waktu' => $esc($log->created_at?->format('d-m-Y H:i:s')), 'petugas' => $esc($log->user?->name ?? 'Sistem'),
                     'modul' => $esc($log->modul), 'aktivitas' => $esc($log->aktivitas), 'subjek' => $esc(trim(class_basename((string) $log->subjek_type).' #'.($log->subjek_id ?? ''), ' #')),
-                    'ip' => $esc($log->ip_address ?? '—'), 'detail' => $esc($log->data ? json_encode($log->data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '—'),
+                    'ip' => $esc($log->ip_address ?? '—'), 'detail' => $esc($this->ringkasan($log->data)),
                 ];
             }),
         ]);
+    }
+
+    /** Ubah data audit terstruktur menjadi kalimat pendek tanpa sintaks JSON. */
+    private function ringkasan(?array $data): string
+    {
+        if (!$data) {
+            return 'Tidak ada detail';
+        }
+
+        $bagian = [];
+        foreach ($data as $kunci => $nilai) {
+            if (is_array($nilai)) {
+                $rincian = [];
+                foreach ($nilai as $nama => $isi) {
+                    $label = mb_strtolower(str_replace('_', ' ', \Illuminate\Support\Str::headline((string) $nama)));
+                    if (is_array($isi) && array_key_exists('dari', $isi) && array_key_exists('menjadi', $isi)) {
+                        $rincian[] = ucfirst($label).' berubah dari '.$this->teks($isi['dari']).' menjadi '.$this->teks($isi['menjadi']);
+                    } elseif (is_array($isi)) {
+                        $rincian[] = ucfirst($label).': '.$this->ringkasan($isi);
+                    } else {
+                        $rincian[] = ucfirst($label).' '.$this->teks($isi);
+                    }
+                }
+                $bagian[] = ucfirst(mb_strtolower(str_replace('_', ' ', \Illuminate\Support\Str::headline((string) $kunci))).': '.implode('. ', $rincian));
+                continue;
+            }
+
+            $label = mb_strtolower(str_replace('_', ' ', \Illuminate\Support\Str::headline((string) $kunci)));
+            $bagian[] = ucfirst($label).': '.$this->teks($nilai);
+        }
+
+        return implode('. ', $bagian).'.';
+    }
+
+    private function teks(mixed $nilai): string
+    {
+        return match (true) {
+            $nilai === null, $nilai === '' => 'kosong',
+            $nilai === true => 'ya',
+            $nilai === false => 'tidak',
+            default => trim((string) $nilai),
+        };
     }
 }

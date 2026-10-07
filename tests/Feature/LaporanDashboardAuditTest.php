@@ -51,10 +51,14 @@ class LaporanDashboardAuditTest extends TestCase
     public function test_audit_log_mendukung_filter_server_side_dan_escape_html(): void
     {
         $admin = User::factory()->create();
-        AktivitasLog::create(['user_id' => $admin->id, 'aktivitas' => '<script>alert(1)</script>', 'modul' => 'master', 'data' => ['id' => 1]]);
+        AktivitasLog::create(['user_id' => $admin->id, 'aktivitas' => '<script>alert(1)</script>', 'modul' => 'master', 'data' => [
+            'kode_barang' => '8888888',
+            'perubahan' => ['foto' => ['dari' => 'ada', 'menjadi' => 'diganti']],
+        ]]);
 
         $this->actingAs($admin)->getJson(route('audit-log.data', ['draw' => 1, 'start' => 0, 'length' => 10, 'modul' => 'master']))
             ->assertOk()->assertJsonPath('recordsFiltered', 1)
-            ->assertJsonPath('data.0.aktivitas', '&lt;script&gt;alert(1)&lt;/script&gt;');
+            ->assertJsonPath('data.0.aktivitas', '&lt;script&gt;alert(1)&lt;/script&gt;')
+            ->assertJsonPath('data.0.detail', 'Kode barang: 8888888. Perubahan: Foto berubah dari ada menjadi diganti.');
     }
 }
