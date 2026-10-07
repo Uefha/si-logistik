@@ -1,160 +1,215 @@
-# SI-LOGISTIK - Tahap 2: Setup, Autentikasi, Migration, Seeder
+# SI-LOGISTIK — Overlay Kumulatif Tahap 1–5
 
-Paket ini adalah **overlay**: ditempel di atas skeleton Laravel 12 yang baru dibuat (tanpa `vendor/` dan `node_modules/`).
-Cakupan hanya Tahap 2. Model/relasi (Tahap 3), master data CRUD, dashboard, dan transaksi belum ada.
+Aplikasi inventaris logistik untuk Bagian Logistik SMA Taruna Nusantara IKN. Paket ini melanjutkan proyek yang sudah memiliki setup/autentikasi, skema database, model, CRUD master barang, kategori, satuan, lokasi, barcode EAN-13 internal, soft delete, unggah foto, dan audit log. Tahap 4 menambahkan transaksi stok masuk/keluar dan POS barcode. Tahap 5 menambahkan scan kamera, kartu stok, histori terfilter, dan penyesuaian stok.
 
-## Isi paket
+## Kondisi proyek dan keputusan stack
 
-| Bagian | Berkas |
+Workspace saat ini memakai Laravel 13, PHP 8.3+, Bootstrap 5.3, Alpine.js, Vite, DataTables 3.1.3 (`datatables.net-bs5`), dan SQLite untuk PHPUnit. Proyek belum memakai Yajra atau jQuery. Ini berbeda dari rencana awal Laravel 12, Yajra DataTables 12, jQuery, dan DataTables 2.3.8; pengguna telah memilih melanjutkan memakai stack yang terpasang. Pertahankan keputusan ini untuk pekerjaan berikutnya.
+
+Frontend dibundel lokal oleh Vite, tanpa CDN. `jsbarcode` menghasilkan barcode Code 128, `qrcode` menghasilkan QR, dan `html5-qrcode` memindai barcode/QR lewat kamera. Tidak ada migration baru pada Tahap 4 atau 5 karena `transactions`, `transaction_details`, `stok_mutasi`, `penyesuaian_stok`, `aktivitas_log`, dan `nomor_urut` sudah tersedia.
+
+## Isi overlay
+
+| Bagian | Cakupan |
 |---|---|
-| Konfigurasi | `config/app.php` (timezone dari `.env`), `config/logistik.php`, `.env.example` |
-| Bahasa | `lang/id/` (auth, validation, passwords, pagination) |
-| Autentikasi (turunan Breeze, stack Blade) | `routes/auth.php`, `AuthenticatedSessionController`, `PasswordController`, `LoginRequest`, `ProfileController`, `ProfileUpdateRequest` |
-| Tampilan Bootstrap 5 | layout `x-layouts.app` dan `x-layouts.guest`, `x-sidebar-link`, `x-flash` (toast), halaman masuk, dashboard sementara, Profil Admin |
-| Frontend | `package.json`, `vite.config.js`, `resources/sass/app.scss`, `resources/js/app.js` (Bootstrap 5, Bootstrap Icons, Alpine.js, tanpa Tailwind) |
-| Database | 11 migration (urutan sesuai ERD), 7 seeder idempotent |
-| Pengujian | `tests/TestCase.php`, `tests/Feature/*` (autentikasi, profil, skema database, seeder) |
-| Alat | `tools/audit.py` (audit pra-serah) |
+| Setup dan autentikasi | Login admin tunggal, profil, konfigurasi aplikasi dan bahasa Indonesia |
+| Database | 11 migration domain, tabel bawaan Laravel, seeder idempotent |
+| Tahap 3 | Model/relasi, enum, factory, CRUD master, barcode internal, foto, DataTables, filter, audit |
+| Tahap 4 | `NomorTransaksiService`, `StokService`, Form Request, POS masuk/keluar, pencarian barcode, daftar/detail transaksi, ledger, audit, label Code 128 + QR |
+| Tahap 5 | Scan kamera, kartu stok, histori transaksi terfilter, riwayat barang, penyesuaian stok ADJ |
+| Frontend | Blade, Bootstrap SCSS, Bootstrap Icons, Alpine, Axios, DataTables, JsBarcode, QRCode |
+| Pemeriksaan | PHPUnit, `tools/audit.ps1`, `tools/audit.py` (Python diperlukan untuk skrip ini) |
 
-Tabel yang dibuat: `kategori_barang`, `satuan`, `lokasi`, `barang`, `transactions`, `transaction_details`,
-`stok_mutasi`, `penyesuaian_stok`, `aktivitas_log`, `pengaturan`, `nomor_urut` (ditambah tabel bawaan Laravel).
+## Instalasi baru
 
-## Instalasi
-
-Prasyarat: PHP 8.3+, Composer, Node.js 20+, MySQL/MariaDB (XAMPP), dan ekstensi PHP `pdo_mysql` serta `pdo_sqlite` (SQLite dipakai oleh `php artisan test`).
+Instruksi dasar overlay awal ditulis untuk skeleton Laravel 12. Karena workspace sekarang mengikuti Laravel 13, gunakan versi yang sama dengan proyek ini untuk instalasi ulang agar dependensi dan lockfile konsisten. Jangan menyalin `vendor/` atau `node_modules/` ke paket overlay.
 
 ```powershell
-# 1. Buat proyek Laravel 12 baru
-composer create-project laravel/laravel si-logistik "12.*"
-cd si-logistik
-
-# 2. Salin SELURUH isi paket ini ke folder si-logistik (pilih "timpa/replace" bila ditanya)
-
-# 3. Hapus berkas skeleton yang tidak dipakai lagi
-Remove-Item resources\views\welcome.blade.php
-Remove-Item resources\css\app.css
-
-# 4. Siapkan .env (menimpa .env bawaan, lalu buat APP_KEY baru)
-Copy-Item .env.example .env -Force
+# Di folder proyek
+Copy-Item .env.example .env
+composer install
 php artisan key:generate
-```
-
-Linux/macOS: ganti langkah 3 dengan `rm resources/views/welcome.blade.php resources/css/app.css` dan langkah 4 dengan `cp .env.example .env && php artisan key:generate`.
-
-5. Buat database kosong `si_logistik` (utf8mb4_unicode_ci) lewat phpMyAdmin, atau:
-
-```powershell
-mysql -u root -e "CREATE DATABASE si_logistik CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-```
-
-6. Sesuaikan `DB_USERNAME` dan `DB_PASSWORD` di `.env`. Isi `ADMIN_PASSWORD` bila ingin kata sandi admin tertentu;
-   bila dikosongkan, seeder membuat kata sandi acak dan menampilkannya **satu kali** di terminal.
-
-```powershell
+# Buat database MySQL/MariaDB si_logistik dan sesuaikan DB_* di .env
 php artisan migrate --seed
+php artisan storage:link
 npm install
-npm run build        # atau: npm run dev (selama pengembangan)
-php artisan serve    # buka http://localhost:8000
+npm run build
+php artisan serve
 ```
 
-Masuk dengan email `ADMIN_EMAIL` (bawaan `admin@logistik.local`) dan kata sandi dari langkah 6, lalu segera ganti lewat menu Profil Admin.
-
-Reset total saat pengembangan: `php artisan migrate:fresh --seed`.
-
-## Keputusan teknis Tahap 2
-
-1. **Breeze tanpa memasang paketnya.** Kode controller dan request diambil dari scaffolding Breeze (stack Blade) lalu disederhanakan untuk satu admin.
-   Dihapus: registrasi, verifikasi email, reset kata sandi via email, hapus akun. Tailwind tidak dipakai; seluruh tampilan Bootstrap 5.
-2. **`config/app.php` diubah satu baris**: `'timezone' => env('APP_TIMEZONE', 'UTC')`. Pada skeleton Laravel 12 nilai ini di-hardcode `UTC`,
-   sehingga `APP_TIMEZONE` di `.env` tidak berpengaruh tanpa perubahan ini. Bawaan paket: `Asia/Makassar` (WITA).
-3. **Seeder memakai query builder, bukan Model**, karena Model baru dibuat di Tahap 3. Semua seeder aman dijalankan berulang:
-   akun admin tidak ditimpa, pengaturan yang diubah admin tidak ditimpa, dan baris master yang sudah di-soft-delete tidak dibuat ulang.
-4. **CHECK constraint** `stok >= 0` dan `stok_minimum >= 0` ditambahkan pada tabel `barang` hanya untuk MySQL/MariaDB
-   (MySQL lama di bawah 8.0.16 mengabaikannya tanpa error; dilewati di SQLite saat test). Ini pengaman tambahan; validasi utama tetap di `StokService`.
-5. **Unique index mencakup baris soft-delete** (sesuai keputusan Tahap 1): kode barang, barcode, dan nama master yang sudah dihapus tidak bisa dipakai ulang.
-6. **Tanpa CDN.** Bootstrap, Bootstrap Icons, dan Alpine dibundel Vite sehingga aplikasi berjalan di jaringan sekolah tanpa internet.
-7. **Dashboard sementara** menampilkan diagnostik (versi, database, zona waktu, bahasa, waktu server) untuk memverifikasi instalasi. Diganti pada Tahap 5.
-8. **Menu sidebar** hanya berisi Dashboard dan Profil Admin; menu modul lain ditambahkan pada tahap masing-masing agar tidak ada tautan ke halaman yang belum ada.
-
-## Skenario uji manual
-
-| # | Langkah | Hasil yang diharapkan |
-|---|---|---|
-| 1 | Buka `http://localhost:8000` sebelum masuk | Diarahkan ke halaman Masuk |
-| 2 | Masuk dengan kata sandi salah | Pesan "Email atau kata sandi salah." di bawah kolom email, tetap di halaman Masuk |
-| 3 | Salah 5 kali berturut-turut, lalu coba kata sandi benar | Ditolak dengan pesan terlalu banyak percobaan; akses pulih setelah hitungan detik berakhir |
-| 4 | Masuk dengan akun admin | Dashboard tampil; diagnostik menunjukkan zona waktu `Asia/Makassar`, bahasa `id`, database `mysql / si_logistik` |
-| 5 | Buka `/register` dan `/forgot-password` | Halaman 404 |
-| 6 | Profil Admin: ubah nama lalu simpan | Toast hijau "Profil berhasil diperbarui."; nama di pojok kanan atas berubah |
-| 7 | Profil Admin: ubah email ke email yang belum dipakai | Berhasil; masuk ulang memakai email baru |
-| 8 | Ubah kata sandi dengan kata sandi saat ini salah | Pesan kesalahan pada kolom "Kata sandi saat ini" |
-| 9 | Ubah kata sandi: baru kurang dari 8 karakter, atau konfirmasi tidak sama | Pesan kesalahan pada kolom kata sandi baru |
-| 10 | Ubah kata sandi dengan benar, keluar, masuk lagi | Toast sukses; masuk berhasil dengan kata sandi baru |
-| 11 | Perkecil jendela ke lebar ponsel | Sidebar tersembunyi; tombol menu membuka sidebar dari kiri |
-| 12 | Klik menu pengguna, pilih Keluar | Kembali ke halaman Masuk |
-
-Pemeriksaan database:
-
-```powershell
-php artisan migrate:status          # semua migration berstatus Ran
-php artisan db:table barang         # kolom, indeks, dan foreign key barang
-php artisan db:seed                 # jalankan lagi: jumlah data tidak bertambah
-```
+`.env.example` menetapkan `APP_LOCALE=id` dan `APP_TIMEZONE=Asia/Makassar`. Buat database dengan charset `utf8mb4`, lalu atur `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD`. Seeder membuat akun awal `admin@logistik.local`; atur `ADMIN_EMAIL`, `ADMIN_NAME`, dan `ADMIN_PASSWORD` sebelum `php artisan db:seed`. Jika kata sandi kosong, seeder membuat kata sandi acak dan menampilkannya satu kali di terminal. Nilai nama aplikasi/instansi awal dapat diatur lewat `LOGISTIK_NAMA_APLIKASI`, `LOGISTIK_NAMA_SINGKAT`, dan `LOGISTIK_NAMA_INSTANSI`.
 
 ```sql
-SELECT (SELECT COUNT(*) FROM kategori_barang) AS kategori,   -- 10
-       (SELECT COUNT(*) FROM satuan)          AS satuan,     -- 12
-       (SELECT COUNT(*) FROM lokasi)          AS lokasi,     -- 10
-       (SELECT COUNT(*) FROM pengaturan)      AS pengaturan, -- 3
-       (SELECT COUNT(*) FROM users)           AS users;      -- 1
+CREATE DATABASE si_logistik CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-## Pengujian otomatis
+Jika file overlay ditempel ke checkout yang sudah ada, salin berkas aplikasi dan migrasi kumulatif tanpa menimpa `.env`, `vendor/`, atau `node_modules/`. Lalu jalankan:
 
 ```powershell
+composer install
+npm install
+php artisan migrate --seed
+php artisan storage:link
+npm run build
 php artisan test
 ```
 
-Mencakup: alur masuk/keluar, penguncian setelah 5 percobaan, pengalihan tamu, rute registrasi yang tidak ada, pembaruan profil dan kata sandi,
-keberadaan seluruh tabel, constraint unik dan foreign key, serta sifat idempotent seeder.
+Seeder dapat dijalankan ulang. Untuk reset data pengembangan saja: `php artisan migrate:fresh --seed`.
 
-## Audit pra-serah
+## Aturan transaksi Tahap 4
 
-Dijalankan terhadap pohon gabungan (skeleton Laravel 12 + paket ini) sebelum paket dibuat. Dapat dijalankan ulang:
+- Nomor transaksi memakai awalan `IN`, `OUT`, tanggal aplikasi (`Asia/Makassar`), dan urutan empat digit. Urutan kembali ke `0001` untuk jenis dan tanggal baru.
+- Baris `nomor_urut` dibuat dengan `insertOrIgnore`, dikunci `lockForUpdate`, lalu dinaikkan di dalam transaksi database yang sama. Indeks unik dan `transactions.nomor_transaksi` menjadi lapisan pengaman tambahan.
+- Semua barang yang terlibat dikunci dalam urutan ID naik. Barang nonaktif/terhapus ditolak.
+- Jumlah dari barcode yang sama digabung, baik di keranjang browser maupun di server. Satu barang hanya memiliki satu baris detail per transaksi.
+- Stok baru berubah sesudah Simpan ditekan. Transaksi, detail, stok, ledger, nomor, dan audit log disimpan di satu `DB::transaction()`; satu barang gagal berarti seluruh perubahan dibatalkan.
+- Barang keluar tidak boleh melampaui stok. Pesan bisnis: `Stok tidak mencukupi. Stok tersedia: N.`
+- Setiap barang dalam transaksi mendapat tepat satu baris `stok_mutasi`. Transaksi bersifat immutable; Tahap 4 tidak menyediakan edit atau hapus transaksi.
+- Scanner USB bertindak seperti keyboard: fokus pada input barcode, pindai, lalu Enter. Label detail barang mencetak Code 128 dan QR tanpa layanan eksternal.
 
-```powershell
-python tools/audit.py .
+## Aturan Tahap 5
+
+- Scan kamera memakai `html5-qrcode` yang dibundel melalui Vite. Kamera terus aktif setelah kode terbaca sampai tombol **Selesai** ditekan; pembacaan berulang atas barcode yang sama saat masih di depan kamera tidak menambah kuantitas berulang kali.
+- Kamera dan scanner USB dapat dipakai bersamaan. Setelah kamera dimulai dan setiap hasil kamera diproses, fokus keyboard dikembalikan ke input barcode.
+- Kamera memerlukan secure context. Di localhost HTTP dapat dipakai untuk pengembangan; untuk ponsel melalui jaringan sekolah, layani aplikasi dengan HTTPS dan sertifikat yang dipercaya perangkat. [MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) menjelaskan syarat secure context; pemindai menggunakan API start/stop dari [html5-qrcode](https://github.com/mebjas/html5-qrcode).
+- Kartu stok hanya membaca ledger `stok_mutasi`, urut tanggal lalu ID. Saldo setiap baris berasal dari `stok_sesudah`; halaman mendukung cetak.
+- Histori transaksi bisa difilter jenis transaksi, barang (termasuk barang terhapus), rentang tanggal, bulan/tahun, nomor, dan petugas.
+- Penyesuaian mengunci ulang barang, mengambil stok sistem terbaru, menghitung `selisih = stok_fisik - stok_sistem`, dan menyimpan transaksi `ADJ`, detail, baris `penyesuaian_stok`, ledger, dan audit dalam satu DB transaction.
+- Selisih nol ditolak karena tidak ada perubahan stok. Selisih negatif disimpan sebagai `qty_keluar`; positif sebagai `qty_masuk`. Nilai selisih pada tabel penyesuaian tetap bertanda.
+
+### Menyiapkan HTTPS XAMPP untuk ponsel di jaringan sekolah
+
+Browser hanya memberi akses kamera pada origin aman seperti HTTPS atau localhost. Ponsel harus membuka hostname server lewat HTTPS; `localhost` pada ponsel menunjuk ponsel itu sendiri. Gunakan hostname DNS internal, misalnya `si-logistik.intra`, yang diarahkan ke IP server. Untuk sertifikat, minta sertifikat server dari CA sekolah dengan SAN berisi hostname tersebut (dan IP LAN bila pengguna mengakses melalui IP). Pastikan CA penerbit dipercaya di ponsel dan PC; jangan menyalin private key ke perangkat klien.
+
+1. Tempatkan sertifikat/full chain dan private key di direktori Apache XAMPP yang aksesnya hanya untuk administrator server.
+2. Aktifkan `mod_ssl` dan `Listen 443` sekali di konfigurasi Apache. Tambahkan virtual host HTTPS berikut ke konfigurasi SSL Apache, ganti hostname dan file sertifikat sesuai lingkungan sekolah:
+
+```apache
+Listen 443
+<VirtualHost *:443>
+    ServerName si-logistik.intra
+    DocumentRoot "D:/Pengembangan Aplikasi/si-logistik/public"
+    SSLEngine on
+    SSLCertificateFile "C:/xampp/apache/conf/ssl.crt/si-logistik-fullchain.crt"
+    SSLCertificateKeyFile "C:/xampp/apache/conf/ssl.key/si-logistik.key"
+
+    <Directory "D:/Pengembangan Aplikasi/si-logistik/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
 ```
 
-| Langkah | Hasil |
+Konfigurasi `mod_ssl` dan directive sertifikat mengacu pada [Apache SSL/TLS How-To](https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html). Jika modul SSL atau `Listen 443` sudah dimuat melalui `httpd-ssl.conf`, jangan menambahkan duplikat.
+
+3. Atur `APP_URL=https://si-logistik.intra` di `.env`, lalu jalankan `php artisan config:clear` dan mulai ulang Apache.
+4. Izinkan koneksi TCP 443 dari jaringan sekolah di Windows Firewall. Jangan meneruskan port router ke internet untuk aplikasi internal.
+5. Di ponsel yang berada pada Wi-Fi sekolah, buka `https://si-logistik.intra`, pastikan sertifikat valid, izinkan akses kamera, lalu buka Barang Masuk/Keluar dan tekan **Pindai dengan kamera**. Pastikan panel kamera berjalan dan tombol **Selesai** menghentikan kamera.
+
+Pemeriksaan cepat di DevTools pada halaman aplikasi: `window.isSecureContext` harus bernilai `true`. Jika browser tetap menolak kamera, pastikan sertifikat dipercaya perangkat, izin kamera origin tersebut aktif, dan kamera tidak sedang dipakai aplikasi lain.
+
+## Skenario uji manual
+
+| Langkah | Hasil yang diharapkan |
 |---|---|
-| 1. `php -l` seluruh berkas PHP | 66 berkas, 0 gagal |
-| 2. Keseimbangan direktif Blade | 7 berkas, 0 tidak seimbang |
-| 3. Referensi `@include` dan `<x-...>` | 7 referensi, 0 hilang |
-| 4. Seluruh `route()` dan `routeIs()` cocok dengan rute terdaftar | 16 pemanggilan, 0 tidak cocok |
-| 5. Seluruh `view()` punya berkas view | 3 pemanggilan, 0 hilang |
-| Tambahan: `use` kelas proyek, migration, `$request->all()` | 24 statement, 14 migration, 0 temuan |
-| Build frontend (`vite build`) di proyek uji | Berhasil (SCSS dan JS terkompilasi) |
+| Masuk sebagai admin dan buka menu Barang Masuk | Halaman POS tampil, kursor fokus di input barcode |
+| Pindai barcode USB dan tekan Enter | Barang muncul satu kali di keranjang; stok belum berubah |
+| Pindai barang yang sama lagi | Jumlah pada baris yang sama bertambah |
+| Cari dengan potongan nama/kode lalu pilih hasil | Barang ditambahkan ke keranjang |
+| Ubah jumlah dan tekan Simpan Barang Masuk | Detail transaksi tampil; stok bertambah; ada satu detail, satu ledger, satu audit |
+| Buka Barang Keluar tanpa penerima | Server menolak input penerima kosong |
+| Simpan jumlah barang keluar di bawah stok tersedia | Transaksi sukses; stok turun sesuai jumlah |
+| Coba mengeluarkan barang melebihi stok | Pesan stok yang tersedia tampil; transaksi dan ledger tidak dibuat |
+| Keranjang berisi beberapa barang, salah satunya kurang stok | Seluruh transaksi batal; stok semua barang tidak berubah |
+| Buka detail barang dan cetak label | Barcode Code 128 dan QR tercetak; layar aplikasi tidak ikut tercetak |
+| Buka Riwayat Transaksi, filter tanggal/jenis/nomor | Daftar sesuai filter; detail transaksi tidak menyediakan aksi edit/hapus |
+| Buka POS lewat localhost lalu mulai scan kamera | Browser meminta izin kamera; hasil menambah barang, kamera tetap hidup sampai Selesai |
+| Buka aplikasi lewat IP LAN memakai HTTP dan tekan Pindai dengan kamera | Aplikasi menjelaskan bahwa HTTPS diperlukan |
+| Buka kartu stok barang | Semua mutasi tampil berurutan dengan tanggal, transaksi, masuk, keluar, saldo; tombol cetak bekerja |
+| Filter histori berdasarkan barang, petugas, jenis, tanggal, bulan dan tahun | Hanya transaksi yang cocok tampil; transaksi penyesuaian juga ada dalam daftar |
+| Hitung stok fisik lebih tinggi dari sistem, tinjau, lalu konfirmasi | Nomor ADJ tercipta, stok naik, selisih positif, detail, ledger masuk, dan audit dibuat |
+| Hitung stok fisik lebih rendah dari sistem | Stok turun, selisih negatif, ledger keluar mencatat kuantitas positif |
+| Masukkan stok fisik yang sama dengan sistem | Konfirmasi menjelaskan tidak ada perubahan dan transaksi tidak disimpan |
 
-Audit dites dengan menyisipkan kesalahan (rute salah, `@endforeach` hilang, sintaks PHP rusak); ketiganya terdeteksi.
+## Query pemeriksaan MySQL
 
-### Temuan dan koreksi selama pembuatan
+Nomor berurutan per hari dan jenis:
 
-| # | Temuan | Perbaikan |
-|---|---|---|
-| 1 | Dokumen Tahap 1 menyebut zona waktu diatur lewat `APP_TIMEZONE`; pada skeleton Laravel 12 timezone di-hardcode `UTC` | `config/app.php` diubah membaca `APP_TIMEZONE` (keputusan teknis nomor 2) |
-| 2 | Opsi Sass `mixed-decls` pada konfigurasi Vite sudah usang dan memunculkan peringatan | Dihapus dari `vite.config.js` |
-| 3 | Sidebar responsif: kelas `offcanvas-lg` Bootstrap tidak membuat sidebar tetap di layar lebar | Gaya `position: fixed` pada layar besar ditambahkan di `app.scss`; CSS hasil build diperiksa |
-| 4 | Test profil memakai email berhuruf besar yang ditolak aturan `lowercase` | Test diperbaiki memakai email huruf kecil |
-| 5 | Breadcrumb menandai item tengah sebagai halaman aktif | Percabangan diubah: item terakhir aktif, item bertautan jadi tautan, sisanya teks biasa |
+```sql
+SELECT tipe, tanggal, terakhir
+FROM nomor_urut
+ORDER BY tanggal DESC, tipe;
+```
 
-### Batas verifikasi (harap dibaca)
+Cek saldo barang terhadap ledger terbaru berdasarkan ID (ledger tidak diubah/dihapus):
 
-Lingkungan pembuatan tidak punya akses ke Packagist, sehingga Laravel belum dapat dipasang di sana. Artinya
-**`php artisan migrate`, `php artisan test`, dan tampilan di browser belum dijalankan oleh saya.** Yang sudah diperiksa: sintaks PHP, audit statis di atas,
-dan build Vite. Mohon jalankan `php artisan migrate:fresh --seed` dan `php artisan test`, lalu kirim pesan error persisnya bila ada.
+```sql
+SELECT b.id, b.kode_barang, b.stok AS stok_barang,
+       sm.stok_sesudah AS saldo_ledger_terakhir
+FROM barang b
+LEFT JOIN stok_mutasi sm
+  ON sm.id = (
+      SELECT sm2.id
+      FROM stok_mutasi sm2
+      WHERE sm2.barang_id = b.id
+      ORDER BY sm2.id DESC
+      LIMIT 1
+  )
+WHERE b.deleted_at IS NULL
+  AND (sm.id IS NULL OR b.stok <> sm.stok_sesudah);
+```
 
-## Berikutnya: Tahap 3
+Hasil query invarian seharusnya kosong. Pemeriksaan ringkas volume transaksi:
 
-Model Eloquent dan relasi (User, KategoriBarang, Satuan, Lokasi, Barang, Transaction, TransactionDetail, StokMutasi, PenyesuaianStok, AktivitasLog, Pengaturan),
-Enum (TipeTransaksi, JenisMutasi, StatusStok), dan factory.
+```sql
+SELECT t.nomor_transaksi, COUNT(DISTINCT td.barang_id) AS jenis_barang,
+       COUNT(sm.id) AS jumlah_ledger
+FROM transactions t
+JOIN transaction_details td ON td.transaction_id = t.id
+LEFT JOIN stok_mutasi sm ON sm.transaction_detail_id = td.id
+GROUP BY t.id, t.nomor_transaksi
+HAVING jenis_barang <> jumlah_ledger;
+```
+
+Hasil query seharusnya kosong; setiap detail transaksi memiliki satu baris ledger.
+
+## Pengujian otomatis dan audit pra-serah
+
+Perintah:
+
+```powershell
+php artisan test
+npm run build
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools\audit.ps1 .
+```
+
+Hasil pada workspace ini:
+
+| Pemeriksaan | Hasil |
+|---|---|
+| `php artisan test --compact` | 115 lulus, 551 asersi |
+| `npm run build` | Berhasil; modul kamera dimuat terpisah saat tombol scan digunakan |
+| PHP lint | Dijalankan oleh audit PowerShell; 0 masalah |
+| Blade dan referensi | Direktif seimbang; semua include dan komponen ditemukan |
+| Rute dan view | Semua `route()`, `routeIs()`, controller method, dan `view()` cocok |
+| Rute ke controller | Semua controller dan metode yang terdaftar ditemukan |
+| `git diff --check` | Bersih |
+
+Lingkungan tidak menyediakan Python, jadi `tools/audit.py` tidak dijalankan. Audit setara dijalankan dengan `tools/audit.ps1`. Migration MySQL dan pemeriksaan browser/kamera langsung belum dijalankan; PHPUnit memakai SQLite memori. Build final berhasil dan membagi kode kamera ke chunk yang dimuat hanya saat pemindaian dimulai. `npm install` melaporkan dua temuan kritis pada seluruh pohon dependensi; audit dan koreksi dependency dicadangkan untuk Tahap 7.
+
+## Temuan dan koreksi
+
+| Temuan | Koreksi |
+|---|---|
+| README sebelumnya menyatakan cakupan berhenti di Tahap 2, padahal kode Tahap 3 sudah ada | README diperbarui menjadi dokumentasi kumulatif Tahap 1–4 |
+| Nomor urut belum punya layanan transaksi | Ditambahkan `NomorTransaksiService` yang mengunci baris urut per jenis/tanggal |
+| Belum ada alur stok masuk/keluar atomik | Ditambahkan `StokService` dengan lock barang berurutan, validasi stok, detail, ledger, dan audit di satu transaksi |
+| Belum ada POS, pencarian barcode, daftar transaksi, atau detail | Ditambahkan halaman, rute, validasi server, dan pencarian barang aktif |
+| Detail barang belum bisa mencetak barcode/QR | Ditambahkan JsBarcode dan QRCode lokal serta CSS cetak |
+| Belum ada penghitungan fisik stok dan riwayat ledger yang dapat dicetak | Ditambahkan penyesuaian ADJ atomik dan halaman kartu stok baca-saja |
+| Kamera langsung dimuat bersama app utama sehingga bundle membesar | Modul kamera menggunakan dynamic import saat tombol scan ditekan |
+| Python tidak tersedia untuk audit bawaan | Ditambahkan audit PowerShell `tools/audit.ps1`; false positive cabang `@empty` pada `@forelse` diperbaiki |
+
+## Tahap berikutnya
+
+Tahap 5 selesai dan menunggu pengujian pengguna. Jangan mulai Tahap 6 sebelum ada persetujuan. Tahap 6 berisi dashboard dan laporan; Tahap 7 berisi hardening, uji race condition/rollback/invarian, UX responsif, pengaturan, dan dokumentasi akhir.

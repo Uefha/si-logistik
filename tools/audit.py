@@ -66,10 +66,61 @@ for p in blade_files:
 notes.append('3. @include (%d) dan <x-...> (%d): %d referensi hilang' % (n_inc, n_comp, missing))
 
 # 4. route('...') terhadap nama rute terdaftar
+RESOURCE_ACTIONS = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']
 names = set()
+route_controllers = []   # (berkas, kelas, metode)
+
+def parse_routes(path):
+    # Mengembalikan nama rute (termasuk hasil Route::resource dan awalan group ->name('x.')) dan referensi controller.
+    lines = open(path, encoding='utf-8').read().split('\n')
+    out = set(); prefix_stack = []
+    uses = {}
+    for ln in lines:
+        m = re.match(r"use\s+([\w\\]+);", ln)
+        if m: uses[m.group(1).split('\\')[-1]] = m.group(1)
+    text = '\n'.join(lines)
+    # tangani per pernyataan: potong di ';' tingkat atas sederhana
+    i = 0
+    stack = []   # (kedalaman_kurung_kurawal, prefix)
+    depth = 0
+    cur = ''
+    for ch in text:
+        cur += ch
+        if ch == '{':
+            depth += 1
+            m = re.search(r"->name\(\s*['\"]([^'\"]*)['\"]\s*\)->group\(function", cur)
+            stack.append((depth, m.group(1) if m else ''))
+            cur = ''
+        elif ch == '}':
+            if stack and stack[-1][0] == depth: stack.pop()
+            depth -= 1
+            cur = ''
+        elif ch == ';':
+            pref = ''.join(p for _, p in stack)
+            stmt = cur
+            for mm in re.finditer(r"->name\(\s*['\"]([^'\"]+)['\"]\s*\)", stmt):
+                if '->group(' in stmt: continue
+                out.add(pref + mm.group(1))
+            r = re.search(r"Route::resource\(\s*['\"]([\w\-]+)['\"]\s*,\s*(\w+)::class\s*\)", stmt)
+            if r:
+                seg, ctrl = r.group(1), r.group(2)
+                acts = list(RESOURCE_ACTIONS)
+                only = re.search(r"->only\(\[([^\]]*)\]\)", stmt)
+                exc = re.search(r"->except\(\[([^\]]*)\]\)", stmt)
+                if only: acts = [a for a in acts if a in re.findall(r"['\"](\w+)['\"]", only.group(1))]
+                if exc: acts = [a for a in acts if a not in re.findall(r"['\"](\w+)['\"]", exc.group(1))]
+                for a in acts:
+                    out.add(pref + seg + '.' + a)
+                    route_controllers.append((path, uses.get(ctrl, ctrl), a))
+            for g in re.finditer(r"\[\s*(\w+)::class\s*,\s*['\"](\w+)['\"]\s*\]", stmt):
+                route_controllers.append((path, uses.get(g.group(1), g.group(1)), g.group(2)))
+            for g in re.finditer(r"Route::(?:get|post|put|patch|delete)\([^;]*?,\s*(\w+)::class\s*\)", stmt):
+                route_controllers.append((path, uses.get(g.group(1), g.group(1)), '__invoke'))
+            cur = ''
+    return out
+
 for rf in glob.glob(ROOT + '/routes/*.php'):
-    t = open(rf, encoding='utf-8').read()
-    names |= set(re.findall(r"->name\(\s*['\"]([^'\"]+)['\"]\s*\)", t))
+    names |= parse_routes(rf)
 bad_routes = 0; n_route = 0
 scan = blade_files + [p for p in php_files if '/app/' in p or '/tests/' in p]
 for p in scan:
@@ -82,6 +133,20 @@ for p in scan:
         if not any(re.fullmatch(re.escape(pat).replace(r'\*', '.*'), n) for n in names):
             bad_routes += 1; err("ROUTEIS %s -> routeIs('%s') tidak cocok dengan rute apa pun" % (rel(p), pat))
 notes.append('4. route()/routeIs(): %d pemanggilan, %d tidak cocok (rute terdaftar: %s)' % (n_route, bad_routes, ', '.join(sorted(names))))
+
+# 4b. setiap [Controller::class, 'metode'] / resource action benar-benar ada
+bad_ctrl = 0
+for (rf, kelas, metode) in route_controllers:
+    f = class_file_for(kelas) if 'class_file_for' in globals() else None
+    if kelas.startswith('App\\'):
+        f = os.path.join(ROOT, 'app', kelas[4:].replace('\\', '/') + '.php')
+    if not f or not os.path.exists(f):
+        bad_ctrl += 1; err("CONTROLLER %s -> %s tidak ditemukan" % (rel(rf), kelas)); continue
+    src = open(f, encoding='utf-8').read()
+    if not re.search(r"function\s+%s\s*\(" % re.escape(metode), src):
+        # metode bisa diwarisi dari kelas dasar di folder yang sama
+        bad_ctrl += 1; err("CONTROLLER %s -> %s::%s() tidak ada" % (rel(rf), kelas.split('\\')[-1], metode))
+notes.append('4b. Rute -> metode controller: %d rujukan, %d tidak ada' % (len(route_controllers), bad_ctrl))
 
 # 5. view('...') di controller
 bad_views = 0; n_view = 0

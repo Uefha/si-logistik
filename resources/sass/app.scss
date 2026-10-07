@@ -176,3 +176,34 @@ $sidebar-link: #b9c8e4;
 
 // ----- Toast ----------------------------------------------------------------
 .toast-container { z-index: 1100; padding-top: calc(1rem + env(safe-area-inset-top, 0px)) !important; }
+
+// ----- DataTables (Bootstrap 5) ---------------------------------------------
+div.dt-container {
+    .dt-search input { min-width: 16rem; }
+    .dt-length select { width: auto; display: inline-block; }
+    .dt-info, .dt-paging { font-size: 0.85rem; color: $secondary; }
+    td.dt-empty { padding: 1rem 0; }
+}
+
+@include media-breakpoint-down(sm) {
+    div.dt-container .dt-search input { min-width: 0; width: 100%; }
+}
+
+.transaksi-keranjang {
+    th, td { padding-left: 1rem; padding-right: 1rem; }
+}
+
+.barcode-label { max-width: 620px; }
+
+@media print {
+    body { background: #fff !important; }
+    .app-sidebar, .app-topbar, .app-footer, .page-head, .transaksi-actions, .toast-container,
+    .app-content > .d-flex { display: none !important; }
+    .app-main { margin: 0 !important; }
+    .app-content { padding: 0 !important; }
+    .barcode-label { border: 0 !important; max-width: 100%; }
+    .barcode-label > .d-flex { justify-content: flex-start !important; }
+    .card { border: 0 !important; box-shadow: none !important; }
+    .halaman-detail-barang .app-content > [data-halaman-detail-barang] > div:first-child,
+    .halaman-detail-barang .app-content > [data-halaman-detail-barang] > div:last-child > .card:not(:nth-child(2)) { display: none !important; }
+}
