@@ -7,6 +7,7 @@ use App\Http\Controllers\Master\LokasiController;
 use App\Http\Controllers\Master\SatuanController;
 use App\Http\Controllers\KartuStokController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\BarangFotoController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PenyesuaianStokController;
 use App\Http\Controllers\ProfileController;
@@ -17,6 +18,7 @@ Route::redirect('/', '/dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/foto-barang/{path}', BarangFotoController::class)->where('path', '.*')->name('barang.foto');
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/{jenis}/pdf', [LaporanController::class, 'pdf'])->name('laporan.pdf');
     Route::get('/laporan/{jenis}/excel', [LaporanController::class, 'excel'])->name('laporan.excel');

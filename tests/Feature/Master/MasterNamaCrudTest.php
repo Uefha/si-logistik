@@ -37,14 +37,14 @@ class MasterNamaCrudTest extends TestCase
     }
 
     #[DataProvider('master')]
-    public function test_guest_diarahkan_ke_login(string $kelas, string $rute): void
+    public function test_guest_diarahkan_ke_login(string $kelas, string $rute, string $kolomFk, string $modul): void
     {
         $this->get(route($rute.'.index'))->assertRedirect(route('login'));
         $this->postJson(route($rute.'.store'), ['nama' => 'X'])->assertUnauthorized();
     }
 
     #[DataProvider('master')]
-    public function test_halaman_index_tampil(string $kelas, string $rute): void
+    public function test_halaman_index_tampil(string $kelas, string $rute, string $kolomFk, string $modul): void
     {
         $this->actingAs($this->admin())->get(route($rute.'.index'))->assertOk()->assertSee('data-crud-create', false);
     }
@@ -63,7 +63,7 @@ class MasterNamaCrudTest extends TestCase
     }
 
     #[DataProvider('master')]
-    public function test_nama_wajib_diisi_dan_unik(string $kelas, string $rute): void
+    public function test_nama_wajib_diisi_dan_unik(string $kelas, string $rute, string $kolomFk, string $modul): void
     {
         $admin = $this->admin();
         $kelas::factory()->create(['nama' => 'Sudah Ada']);
@@ -76,7 +76,7 @@ class MasterNamaCrudTest extends TestCase
     }
 
     #[DataProvider('master')]
-    public function test_nama_milik_data_yang_sudah_dihapus_tetap_ditolak(string $kelas, string $rute): void
+    public function test_nama_milik_data_yang_sudah_dihapus_tetap_ditolak(string $kelas, string $rute, string $kolomFk, string $modul): void
     {
         $model = $kelas::factory()->create(['nama' => 'Pernah Ada']);
         $model->delete();
@@ -86,7 +86,7 @@ class MasterNamaCrudTest extends TestCase
     }
 
     #[DataProvider('master')]
-    public function test_ubah_data_boleh_mempertahankan_nama_sendiri(string $kelas, string $rute): void
+    public function test_ubah_data_boleh_mempertahankan_nama_sendiri(string $kelas, string $rute, string $kolomFk, string $modul): void
     {
         $model = $kelas::factory()->create(['nama' => 'Nama Lama']);
 
@@ -97,7 +97,7 @@ class MasterNamaCrudTest extends TestCase
     }
 
     #[DataProvider('master')]
-    public function test_ubah_ke_nama_milik_data_lain_ditolak(string $kelas, string $rute): void
+    public function test_ubah_ke_nama_milik_data_lain_ditolak(string $kelas, string $rute, string $kolomFk, string $modul): void
     {
         $lain = $kelas::factory()->create(['nama' => 'Milik Lain']);
         $model = $kelas::factory()->create(['nama' => 'Milik Saya']);
@@ -119,7 +119,7 @@ class MasterNamaCrudTest extends TestCase
     }
 
     #[DataProvider('master')]
-    public function test_hapus_data_yang_dipakai_barang_ditolak(string $kelas, string $rute, string $kolomFk): void
+    public function test_hapus_data_yang_dipakai_barang_ditolak(string $kelas, string $rute, string $kolomFk, string $modul): void
     {
         $model = $kelas::factory()->create();
         Barang::factory()->create([$kolomFk => $model->id]);
@@ -141,7 +141,7 @@ class MasterNamaCrudTest extends TestCase
     }
 
     #[DataProvider('master')]
-    public function test_datatables_mengembalikan_data_dan_jumlah_barang(string $kelas, string $rute, string $kolomFk): void
+    public function test_datatables_mengembalikan_data_dan_jumlah_barang(string $kelas, string $rute, string $kolomFk, string $modul): void
     {
         $model = $kelas::factory()->create(['nama' => 'Berisi Barang']);
         Barang::factory()->count(2)->create([$kolomFk => $model->id]);

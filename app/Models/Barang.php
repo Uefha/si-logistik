@@ -91,7 +91,7 @@ class Barang extends Model
      */
     protected function fotoUrl(): Attribute
     {
-        return Attribute::get(fn (): ?string => $this->foto ? asset('storage/'.$this->foto) : null);
+        return Attribute::get(fn (): ?string => $this->foto ? route('barang.foto', ['path' => $this->foto]) : null);
     }
 
     // ------------------------------------------------------------------ scope
