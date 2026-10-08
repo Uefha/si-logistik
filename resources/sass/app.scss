@@ -1,0 +1,290 @@
+// ---------------------------------------------------------------------------
+// SI-LOGISTIK - tema biru, putih, abu-abu (Bootstrap 5.3)
+// ---------------------------------------------------------------------------
+
+$primary: #1f4e9c;
+$secondary: #6b7686;
+$success: #198754;
+$warning: #f0ad00;
+$danger: #d9363e;
+
+$body-bg: #f4f6fa;
+$body-color: #1b2433;
+$font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$border-radius: 0.55rem;
+$border-radius-lg: 0.8rem;
+$card-border-color: #e3e8f0;
+$card-cap-bg: #fff;
+$input-focus-border-color: #2f6fd0;
+$input-focus-box-shadow: 0 0 0 0.2rem rgba(47, 111, 208, 0.18);
+$breadcrumb-divider: quote("\203A");
+
+@import "bootstrap/scss/bootstrap";
+
+$sidebar-width: 262px;
+$sidebar-bg: #0f2c5c;
+$sidebar-link: #b9c8e4;
+
+// ----- Kerangka aplikasi (sidebar + konten) ---------------------------------
+.app-sidebar {
+    --bs-offcanvas-width: #{$sidebar-width};
+    --bs-offcanvas-bg: #{$sidebar-bg};
+    --bs-offcanvas-color: #fff;
+    background-color: $sidebar-bg;
+    color: #fff;
+
+    .offcanvas-body {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        padding: 0;
+    }
+}
+
+@include media-breakpoint-up(lg) {
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: $sidebar-width;
+        z-index: 1030;
+        overflow-y: auto;
+        visibility: visible !important;
+        transform: none !important;
+        background-color: $sidebar-bg !important;
+    }
+
+    .app-main {
+        margin-left: $sidebar-width;
+    }
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.15rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #fff;
+    text-decoration: none;
+
+    .app-brand-logo { width: 2.7rem; height: 2.7rem; object-fit: contain; flex: 0 0 auto; border-radius: 50%; background: #fff; }
+
+    strong { display: block; line-height: 1.1; letter-spacing: 0.02em; }
+    small { color: $sidebar-link; }
+}
+
+.app-nav {
+    padding: 1rem 0.75rem;
+
+    .nav-heading {
+        padding: 0.75rem 0.75rem 0.35rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #7d92b8;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.8rem;
+        border-radius: 0.55rem;
+        color: $sidebar-link;
+        font-weight: 500;
+
+        &:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+        &.active { background: $primary; color: #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); }
+        .bi { font-size: 1.05rem; }
+    }
+}
+
+.app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: calc(0.7rem + env(safe-area-inset-top, 0px)) 1.25rem 0.7rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid #e3e8f0;
+}
+
+.app-content {
+    padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 991.98px) {
+    .app-content { padding: 1rem 0.75rem calc(1.5rem + env(safe-area-inset-bottom, 0px)); }
+    .page-head { padding-inline: 0.15rem; }
+
+    // Pada HP dan tablet, setiap baris tabel menjadi kartu dengan label kolom.
+    .table-responsive { overflow: visible !important; }
+    table.table:not(.table-no-cards) {
+        display: block;
+        width: 100% !important;
+        margin-bottom: 0;
+
+        > thead { display: none; }
+        > tbody { display: block; width: 100%; }
+        > tbody > tr {
+            display: block;
+            margin: 0.65rem 0.5rem;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+            border-radius: 0.65rem;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(15, 44, 92, 0.06);
+
+            > td {
+                display: grid;
+                grid-template-columns: minmax(6.25rem, 36%) minmax(0, 1fr);
+                gap: 0.5rem;
+                align-items: start;
+                width: auto !important;
+                padding: 0.55rem 0.7rem;
+                border: 0;
+                border-bottom: 1px solid #edf0f4;
+                text-align: left !important;
+                white-space: normal !important;
+                overflow-wrap: anywhere;
+
+                &::before {
+                    content: attr(data-label);
+                    color: #64748b;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    line-height: 1.4;
+                }
+
+                &:last-child { border-bottom: 0; }
+                &:not([data-label])::before,
+                &[data-label=""]::before { content: none; }
+            }
+
+            > td[colspan] {
+                display: block;
+                text-align: center !important;
+                &::before { content: none; }
+            }
+        }
+    }
+
+    // Bungkus kontrol DataTables pada layar tablet dan HP.
+    .dt-container .dt-layout-row { flex-wrap: wrap; row-gap: 0.5rem; }
+    .dt-container .dt-layout-cell { max-width: 100%; overflow-wrap: anywhere; }
+    .dt-container .dt-search input { max-width: min(65vw, 14rem); }
+    .dt-container .dt-length select { max-width: 6rem; }
+    .dataTables_wrapper > .row { row-gap: 0.5rem; }
+    .dataTables_wrapper .dataTables_filter input { max-width: min(65vw, 14rem); }
+    .dataTables_wrapper .dataTables_paginate { overflow-wrap: anywhere; }
+}
+
+.app-footer {
+    padding: 0 1.25rem 1.5rem;
+    font-size: 0.8rem;
+    color: $secondary;
+}
+
+.page-head h1 { color: $primary; }
+
+// ----- Kartu & tabel --------------------------------------------------------
+.card { box-shadow: 0 1px 2px rgba(15, 44, 92, 0.05); }
+.card-header { font-weight: 600; }
+.table > :not(caption) > * > * { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+
+.diag-list dt { font-weight: 500; color: $secondary; }
+.diag-list dd { margin-bottom: 0.6rem; }
+
+// ----- Halaman masuk --------------------------------------------------------
+.auth-hero {
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem;
+    color: #fff;
+    background:
+        radial-gradient(circle at 15% 15%, rgba(76, 155, 232, 0.45), transparent 45%),
+        linear-gradient(145deg, #0f2c5c 0%, #1f4e9c 100%);
+
+    .auth-logo { width: 7rem; height: 7rem; object-fit: contain; margin-bottom: 1.5rem; border-radius: 50%; background: #fff; padding: 0.15rem; }
+
+    h2 { font-weight: 700; }
+    p { color: #cfdcf3; max-width: 28rem; }
+    ul { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+    li { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.65rem; color: #e6eefb; }
+    li .bi { color: #8fc2ff; }
+}
+
+.auth-card { max-width: 25rem; }
+.auth-logo-mobile { width: 5.5rem; height: 5.5rem; object-fit: contain; border-radius: 50%; background: #fff; padding: 0.1rem; }
+
+// ----- Toast ----------------------------------------------------------------
+.toast-container { z-index: 1100; padding-top: calc(1rem + env(safe-area-inset-top, 0px)) !important; }
+
+// ----- DataTables (Bootstrap 5) ---------------------------------------------
+div.dt-container {
+    .dt-search input { min-width: 16rem; }
+    .dt-length select { width: auto; display: inline-block; }
+    .dt-info, .dt-paging { font-size: 0.85rem; color: $secondary; }
+    td.dt-empty { padding: 1rem 0; }
+}
+
+@include media-breakpoint-down(sm) {
+    div.dt-container .dt-search input { min-width: 0; width: 100%; }
+}
+
+.transaksi-keranjang {
+    th, td { padding-left: 1rem; padding-right: 1rem; }
+}
+
+.barcode-label { max-width: 620px; }
+
+.dashboard-stat { min-height: 118px; }
+.chart-wrap { position: relative; height: 300px; }
+.chart-wrap-pie { height: 300px; }
+
+.detail-barang-info {
+    .detail-barang-label {
+        color: #52627a;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding-top: 0.25rem;
+    }
+
+    .detail-barang-value {
+        color: #172b4d;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+        margin-bottom: 0.85rem;
+    }
+
+    .detail-barang-deskripsi { white-space: normal; }
+}
+
+.detail-transaksi-barang { min-width: 250px; }
+.detail-transaksi-barang-nama { display: inline-block; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.detail-transaksi-barang-meta { display: flex; flex-wrap: wrap; gap: 0.2rem 0.75rem; margin-top: 0.3rem; color: #52627a; font-size: 0.8rem; line-height: 1.45; }
+.detail-transaksi-barang-meta span { overflow-wrap: anywhere; }
+
+@include media-breakpoint-down(sm) {
+    .chart-wrap { height: 250px; }
+}
+
+@media print {
+    body { background: #fff !important; }
+    .app-sidebar, .app-topbar, .app-footer, .page-head, .transaksi-actions, .toast-container,
+    .app-content > .d-flex { display: none !important; }
+    .app-main { margin: 0 !important; }
+    .app-content { padding: 0 !important; }
+    .barcode-label { border: 0 !important; max-width: 100%; }
+    .barcode-label > .d-flex { justify-content: flex-start !important; }
+    .card { border: 0 !important; box-shadow: none !important; }
+    .halaman-detail-barang .app-content > [data-halaman-detail-barang] > div:first-child,
+    .halaman-detail-barang .app-content > [data-halaman-detail-barang] > div:last-child > .card:not(:nth-child(2)) { display: none !important; }
+}

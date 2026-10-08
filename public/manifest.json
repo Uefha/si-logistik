@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "SI-Logistik SMA Taruna Nusantara IKN",
+  "short_name": "SI-Logistik",
+  "description": "Sistem informasi logistik SMA Taruna Nusantara IKN",
+  "lang": "id-ID",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#0f2c5c",
+  "icons": [
+    { "src": "/images/logo-sekolah-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/images/logo-sekolah.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
