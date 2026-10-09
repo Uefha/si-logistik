@@ -85,8 +85,6 @@
             </button>
             <div class="fw-semibold text-secondary d-none d-sm-block">{{ config('logistik.nama_aplikasi') }}</div>
 
-            <button type="button" class="btn btn-outline-primary btn-sm d-none" data-pwa-install>Pasang aplikasi</button>
-
             <div class="dropdown ms-auto">
                 <button class="btn btn-light border d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle fs-5 text-primary"></i>

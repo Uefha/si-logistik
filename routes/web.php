@@ -12,11 +12,12 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PenyesuaianStokController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Middleware\PreventBackHistory;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', PreventBackHistory::class])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/foto-barang/{path}', BarangFotoController::class)->where('path', '.*')->name('barang.foto');
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
