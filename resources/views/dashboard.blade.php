@@ -27,7 +27,7 @@
             @empty<tr><td colspan="4" class="text-center text-secondary py-4">Semua stok berada di atas batas minimum.</td></tr>@endforelse
             </tbody></table></div></div></div>
         <div class="col-xl-6"><div class="card h-100"><div class="card-header">Mutasi Terbaru</div><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>Waktu</th><th>Barang</th><th>Jenis</th><th class="text-end">Jumlah</th></tr></thead><tbody>
-            @forelse ($mutasiTerbaru as $mutasi)<tr><td class="text-nowrap">{{ $mutasi->tanggal->format('d/m H:i') }}</td><td>{{ $mutasi->barang?->nama_barang ?? '—' }}</td><td>{{ $mutasi->jenis->label() }}</td><td class="text-end">{{ \App\Support\Format::angka((float) $mutasi->qty_masuk ?: (float) $mutasi->qty_keluar) }}</td></tr>
+            @forelse ($mutasiTerbaru as $mutasi)<tr><td class="text-nowrap">{{ $mutasi->created_at?->format('d/m H:i') ?? $mutasi->tanggal->format('d/m H:i') }}</td><td>{{ $mutasi->barang?->nama_barang ?? '—' }}</td><td>{{ $mutasi->jenis->label() }}</td><td class="text-end">{{ \App\Support\Format::angka((float) $mutasi->qty_masuk ?: (float) $mutasi->qty_keluar) }}</td></tr>
             @empty<tr><td colspan="4" class="text-center text-secondary py-4">Belum ada mutasi stok.</td></tr>@endforelse
             </tbody></table></div></div></div>
     </div>

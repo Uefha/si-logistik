@@ -51,7 +51,9 @@ class DashboardController extends Controller
                 'stok_kategori' => $kategori->map(fn ($item) => (float) $item->stok)->values(),
             ],
             'peringatanStok' => (clone $barangAktif)->with(['satuan', 'lokasi'])->whereColumn('stok', '<=', 'stok_minimum')->orderBy('stok')->limit(8)->get(),
-            'mutasiTerbaru' => StokMutasi::with(['barang', 'user'])->latest('tanggal')->latest('id')->limit(8)->get(),
+            // `tanggal` adalah tanggal bisnis (transaksi masuk/keluar disimpan pukul 00:00),
+            // sedangkan `created_at` menunjukkan kapan mutasi benar-benar dicatat.
+            'mutasiTerbaru' => StokMutasi::with(['barang', 'user'])->latest('created_at')->latest('id')->limit(8)->get(),
             'notifikasiCount' => (clone $barangAktif)->whereColumn('stok', '<=', 'stok_minimum')->count(),
         ]);
     }
