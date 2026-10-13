@@ -189,6 +189,7 @@ $sidebar-link: #b9c8e4;
     padding: 0 1.25rem 1.5rem;
     font-size: 0.8rem;
     color: $secondary;
+    text-align: right;
 }
 
 .page-head h1 { color: $primary; }
@@ -203,8 +204,7 @@ $sidebar-link: #b9c8e4;
 
 // ----- Halaman masuk --------------------------------------------------------
 .auth-page {
-    background: linear-gradient(rgba(12, 31, 62, 0.08), rgba(12, 31, 62, 0.18)),
-        url('/images/login-background.png') center / cover fixed;
+    background: #f4f7fc;
 }
 
 .auth-hero {
@@ -213,7 +213,7 @@ $sidebar-link: #b9c8e4;
     justify-content: center;
     padding: 4rem;
     color: #fff;
-    background: linear-gradient(145deg, rgba(15, 44, 92, 0.72), rgba(31, 78, 156, 0.40));
+    background: linear-gradient(145deg, #0f2c5c, #1f4e9c);
 
     .auth-logo { width: 7rem; height: 7rem; object-fit: contain; margin-bottom: 1.5rem; border-radius: 50%; background: #fff; padding: 0.15rem; }
 
@@ -224,7 +224,7 @@ $sidebar-link: #b9c8e4;
     li .bi { color: #8fc2ff; }
 }
 
-.auth-panel { position: relative; background: transparent; }
+.auth-panel { position: relative; background: #f4f7fc; }
 .auth-card {
     max-width: 27rem;
     padding: 2.25rem;
@@ -249,7 +249,7 @@ $sidebar-link: #b9c8e4;
 .auth-logo-mobile { width: 5.5rem; height: 5.5rem; object-fit: contain; border-radius: 50%; background: #fff; padding: 0.1rem; }
 
 @include media-breakpoint-down(lg) {
-    .auth-panel { min-height: 100vh; background: rgba(10, 32, 66, 0.12); }
+    .auth-panel { min-height: 100vh; background: #f4f7fc; }
     .auth-card { padding: 1.75rem; }
 }
 

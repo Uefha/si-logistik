@@ -14,12 +14,12 @@
     <title>{{ $title ? $title.' | ' : '' }}{{ config('logistik.nama_singkat') }}</title>
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     <style>
-        .auth-page { background: linear-gradient(rgba(12, 31, 62, .08), rgba(12, 31, 62, .18)), url('{{ asset('images/login-background.png') }}') center / cover fixed; }
-        .auth-hero { background: linear-gradient(145deg, rgba(15, 44, 92, .72), rgba(31, 78, 156, .40)); }
-        .auth-panel { position: relative; background: transparent; }
+        .auth-page { background: #f4f7fc; }
+        .auth-hero { background: linear-gradient(145deg, #0f2c5c, #1f4e9c); }
+        .auth-panel { position: relative; background: #f4f7fc; }
         .auth-card { max-width: 27rem; padding: 2.25rem; border: 1px solid rgba(255, 255, 255, .75); border-radius: 1.5rem; background: rgba(255, 255, 255, .95); box-shadow: 0 1.5rem 4rem rgba(9, 29, 58, .24); }
         .auth-panel footer { position: absolute; right: 1.25rem; bottom: 1.25rem; z-index: 1; max-width: calc(100% - 2.5rem); margin: 0 !important; padding: .45rem .9rem; border-radius: 999px; color: #fff !important; background: rgba(12, 31, 62, .68); text-align: right; }
-        @media (max-width: 991.98px) { .auth-panel { min-height: 100vh; background: rgba(10, 32, 66, .12); } .auth-card { padding: 1.75rem; } }
+        @media (max-width: 991.98px) { .auth-panel { min-height: 100vh; background: #f4f7fc; } .auth-card { padding: 1.75rem; } }
     </style>
 </head>
 <body>
@@ -45,7 +45,7 @@
                     </div>
                     {{ $slot }}
                 </div>
-                <footer class="text-secondary small text-center mt-4">&copy; {{ now()->year }} Muhammad Nur Fadila &middot; {{ config('logistik.nama_instansi') }}</footer>
+                <footer class="text-secondary small mt-4">&copy; {{ now()->year }} Muhammad Nur Fadila &middot; {{ config('logistik.nama_instansi') }}</footer>
             </div>
         </div>
     </div>
